@@ -1,8 +1,7 @@
-import com.intellij.openapi.actionSystem.AnAction
-import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.actionSystem.LangDataKeys
-import com.intellij.openapi.actionSystem.PlatformDataKeys
+import com.intellij.openapi.actionSystem.*
 import com.intellij.openapi.command.WriteCommandAction
+import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiField
 import com.intellij.psi.util.PsiTreeUtil
@@ -19,15 +18,18 @@ class ModelMapAction : AnAction() {
         val dialog = ShowDialog(psiClass)
         dialog.show()
 
+        val project = e.project ?: return
+        val editor = CommonDataKeys.EDITOR.getData(e.dataContext) ?: return
+
         if (dialog.isOK) {
-            generateModelMapper(psiClass, dialog.getSelectedField())
+            generateModelMapper(psiClass, dialog.getSelectedField(), project, editor)
         }
     }
 
-    private fun generateModelMapper(psiClass: PsiClass, selectedField: List<PsiField>) {
+    private fun generateModelMapper(psiClass: PsiClass, selectedField: List<PsiField>, project: Project, editor: Editor) {
         object : WriteCommandAction.Simple<Unit>(psiClass.project, psiClass.containingFile){
             override fun run() {
-                MapGenerator(psiClass, selectedField).generate()
+                MapGenerator(psiClass, selectedField, project, editor).generate()
             }
         }.execute()
     }
